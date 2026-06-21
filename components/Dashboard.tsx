@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import useSWR from "swr";
 import type { HoldingRow, PortfolioTotals } from "@/lib/portfolio";
 import {
@@ -56,7 +57,13 @@ export default function Dashboard({ email }: { email: string }) {
       <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Portfolio Tracker</h1>
-          <p className="truncate text-sm text-[var(--muted)]">{email}</p>
+          <Link
+            href="/account"
+            className="inline-block max-w-full truncate text-sm text-[var(--muted)] hover:text-[var(--accent)] hover:underline"
+            title="Account settings"
+          >
+            {email} · Account
+          </Link>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
           <button
