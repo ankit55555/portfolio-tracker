@@ -10,6 +10,7 @@ import {
 } from "@/lib/format";
 import HoldingsTable from "@/components/HoldingsTable";
 import HoldingForm from "@/components/HoldingForm";
+import ImportHoldings from "@/components/ImportHoldings";
 import SignOutButton from "@/components/SignOutButton";
 
 type PortfolioResponse = {
@@ -38,6 +39,7 @@ export default function Dashboard({ email }: { email: string }) {
     });
 
   const [showAdd, setShowAdd] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<HoldingRow | null>(null);
 
   async function handleDelete(h: HoldingRow) {
@@ -62,6 +64,12 @@ export default function Dashboard({ email }: { email: string }) {
             className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
           >
             + Add holding
+          </button>
+          <button
+            onClick={() => setShowImport(true)}
+            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm hover:border-[var(--accent)]"
+          >
+            Import
           </button>
           <button
             onClick={() => mutate()}
@@ -170,6 +178,15 @@ export default function Dashboard({ email }: { email: string }) {
           onCancel={() => setEditing(null)}
           onDone={() => {
             setEditing(null);
+            mutate();
+          }}
+        />
+      )}
+      {showImport && (
+        <ImportHoldings
+          onCancel={() => setShowImport(false)}
+          onDone={() => {
+            setShowImport(false);
             mutate();
           }}
         />
