@@ -53,28 +53,28 @@ export default function Dashboard({ email }: { email: string }) {
   return (
     <main className="mx-auto max-w-6xl p-4 sm:p-6">
       {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Portfolio Tracker</h1>
-          <p className="text-sm text-[var(--muted)]">{email}</p>
+          <p className="truncate text-sm text-[var(--muted)]">{email}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
           <button
             onClick={() => setShowAdd(true)}
-            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white hover:opacity-90 sm:w-auto"
           >
             + Add holding
           </button>
           <button
             onClick={() => setShowImport(true)}
-            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm hover:border-[var(--accent)]"
+            className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:border-[var(--accent)] sm:w-auto"
           >
             Import
           </button>
           <button
             onClick={() => mutate()}
             disabled={isValidating}
-            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm hover:border-[var(--accent)] disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:border-[var(--accent)] disabled:opacity-60 sm:w-auto"
           >
             {isValidating ? "Refreshing…" : "Refresh"}
           </button>
