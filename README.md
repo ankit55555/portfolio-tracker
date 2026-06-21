@@ -29,7 +29,7 @@ npm run dev                 # http://localhost:3000
 
 ```
 email:    ankitkumar@tenovia.com
-password: changeme123
+password: 123ABC456
 ```
 
 Override the seed account with `SEED_EMAIL` / `SEED_PASSWORD` env vars before
