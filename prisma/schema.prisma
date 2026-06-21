@@ -39,3 +39,13 @@ model Holding {
 
   @@index([userId])
 }
+
+model PasswordResetCode {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String // bcrypt hash of the 6-digit code
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
