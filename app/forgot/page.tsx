@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 export default function ForgotPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [resetKey, setResetKey] = useState("");
   const [newPassword, setNew] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +24,7 @@ export default function ForgotPage() {
     const res = await fetch("/api/reset-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, resetKey, newPassword }),
+      body: JSON.stringify({ email, newPassword }),
     });
     setSaving(false);
     if (!res.ok) {
@@ -66,22 +65,6 @@ export default function ForgotPage() {
                 className={inputCls}
                 placeholder="you@example.com"
               />
-            </div>
-            <div>
-              <label className="block text-sm mb-1 text-[var(--muted)]">
-                Reset key
-              </label>
-              <input
-                type="password"
-                required
-                value={resetKey}
-                onChange={(e) => setResetKey(e.target.value)}
-                className={inputCls}
-                placeholder="Your reset key"
-              />
-              <p className="mt-1 text-[11px] text-[var(--muted)]">
-                The shared key that protects resets (ask the admin if unsure).
-              </p>
             </div>
             <div>
               <label className="block text-sm mb-1 text-[var(--muted)]">

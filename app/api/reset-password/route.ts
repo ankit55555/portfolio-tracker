@@ -4,12 +4,11 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-// Self-service password reset for locked-out users. Because there's no email
-// provider wired up, the reset is gated by a shared "reset key" so a stranger
-// can't reset someone else's account. Falls back to AUTH_SECRET so it works
-// out of the box; set a dedicated RESET_KEY env var to use a friendlier code.
+// Self-service password reset for locked-out users (email + new password).
+// Optional protection: if a RESET_KEY env var is set, callers must supply it;
+// if it's not set (the default), resets are keyless for convenience.
 export async function POST(req: Request) {
-  const resetKey = process.env.RESET_KEY || process.env.AUTH_SECRET;
+  const resetKey = process.env.RESET_KEY;
 
   let body: { email?: string; resetKey?: string; newPassword?: string };
   try {
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  if (!resetKey || (body.resetKey ?? "") !== resetKey) {
+  if (resetKey && (body.resetKey ?? "") !== resetKey) {
     return NextResponse.json(
       { error: "Invalid reset key." },
       { status: 403 }
