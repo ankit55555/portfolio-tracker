@@ -71,6 +71,19 @@ export default function Dashboard({ email }: { email: string }) {
     [holdings, search, filter, sortKey, sortDir]
   );
 
+  const { best, worst } = useMemo(() => {
+    const live = holdings.filter((h) => h.gainPct != null);
+    if (live.length === 0)
+      return { best: null as HoldingRow | null, worst: null as HoldingRow | null };
+    let best = live[0];
+    let worst = live[0];
+    for (const h of live) {
+      if ((h.gainPct ?? 0) > (best.gainPct ?? 0)) best = h;
+      if ((h.gainPct ?? 0) < (worst.gainPct ?? 0)) worst = h;
+    }
+    return { best, worst };
+  }, [holdings]);
+
   async function handleDelete(h: HoldingRow) {
     await fetch(`/api/holdings/${h.id}`, { method: "DELETE" });
     mutate();
@@ -118,7 +131,7 @@ export default function Dashboard({ email }: { email: string }) {
       </header>
 
       {/* Summary cards */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
         <SummaryCard label="Invested" value={formatINR(totals?.buyValue ?? 0)} />
         <SummaryCard
           label="Current Value"
@@ -128,13 +141,42 @@ export default function Dashboard({ email }: { email: string }) {
           label="Unrealised Gain"
           value={formatSignedINR(totals?.gainRs ?? 0)}
           valueClass={gainClass(totals?.gainRs ?? 0)}
+          sub={formatPercent(totals?.gainPct ?? 0)}
+          subClass={gainClass(totals?.gainPct ?? 0)}
         />
         <SummaryCard
           label="Return %"
           value={formatPercent(totals?.gainPct ?? 0)}
           valueClass={gainClass(totals?.gainPct ?? 0)}
         />
+        <SummaryCard
+          label="Today's P&L"
+          value={formatSignedINR(totals?.dayChangeRs ?? 0)}
+          valueClass={gainClass(totals?.dayChangeRs ?? 0)}
+          sub={formatPercent(totals?.dayChangePct ?? 0)}
+          subClass={gainClass(totals?.dayChangePct ?? 0)}
+        />
       </section>
+
+      {/* Best / worst performer */}
+      {best && worst && (
+        <div className="mb-4 flex flex-wrap gap-3 text-sm">
+          <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+            <span className="text-[var(--muted)]">Top gainer</span>
+            <span className="font-medium">{best.symbol}</span>
+            <span className="font-semibold text-[var(--gain)] tabular-nums">
+              {formatPercent(best.gainPct)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+            <span className="text-[var(--muted)]">Top loser</span>
+            <span className="font-medium">{worst.symbol}</span>
+            <span className="font-semibold text-[var(--loss)] tabular-nums">
+              {formatPercent(worst.gainPct)}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Status line */}
       <div className="flex items-center justify-between mb-2 text-xs text-[var(--muted)]">
@@ -187,6 +229,7 @@ export default function Dashboard({ email }: { email: string }) {
           ) : (
             <HoldingsTable
               rows={displayed}
+              totalValue={totals?.currentValue ?? 0}
               sortKey={sortKey}
               sortDir={sortDir}
               onSort={onSort}
@@ -261,10 +304,14 @@ function SummaryCard({
   label,
   value,
   valueClass,
+  sub,
+  subClass,
 }: {
   label: string;
   value: string;
   valueClass?: string;
+  sub?: string;
+  subClass?: string;
 }) {
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
@@ -272,6 +319,11 @@ function SummaryCard({
       <div className={`text-lg font-semibold tabular-nums ${valueClass ?? ""}`}>
         {value}
       </div>
+      {sub && (
+        <div className={`text-xs tabular-nums mt-0.5 ${subClass ?? "text-[var(--muted)]"}`}>
+          {sub}
+        </div>
+      )}
     </div>
   );
 }

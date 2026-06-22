@@ -14,10 +14,16 @@ type Props = {
   rows: HoldingRow[];
   onEdit: (h: HoldingRow) => void;
   onDelete: (h: HoldingRow) => void;
+  totalValue?: number;
   sortKey?: SortKey;
   sortDir?: SortDir;
   onSort?: (k: SortKey) => void;
 };
+
+function weightOf(r: HoldingRow, totalValue: number): number | null {
+  if (!totalValue || r.currentValue == null) return null;
+  return (r.currentValue / totalValue) * 100;
+}
 
 const COLUMNS: { label: string; key: SortKey; align: "left" | "right" }[] = [
   { label: "Stock", key: "symbol", align: "left" },
@@ -64,6 +70,7 @@ export default function HoldingsTable({
   rows,
   onEdit,
   onDelete,
+  totalValue = 0,
   sortKey,
   sortDir,
   onSort,
@@ -111,15 +118,38 @@ export default function HoldingsTable({
                 value={formatINR(r.currentValue)}
                 className="font-medium"
               />
+              <Metric label="CMP" value={r.live ? formatPrice(r.cmp) : "—"} />
               <Metric
-                label="CMP"
-                value={r.live ? formatPrice(r.cmp) : "—"}
+                label="Today"
+                value={
+                  r.dayChangePct != null ? formatPercent(r.dayChangePct) : "—"
+                }
+                className={gainClass(r.dayChangePct)}
               />
               <Metric
                 label="Buy × Qty"
                 value={`${formatPrice(r.buyPrice)} × ${formatNumber(r.quantity)}`}
               />
+              <Metric
+                label="Weight"
+                value={
+                  weightOf(r, totalValue) != null
+                    ? `${weightOf(r, totalValue)!.toFixed(1)}%`
+                    : "—"
+                }
+              />
             </div>
+
+            {weightOf(r, totalValue) != null && (
+              <div className="mt-2 h-1.5 overflow-hidden rounded bg-[var(--surface-2)]">
+                <div
+                  className="h-full rounded bg-[var(--accent)]"
+                  style={{
+                    width: `${Math.min(weightOf(r, totalValue)!, 100)}%`,
+                  }}
+                />
+              </div>
+            )}
 
             <div className="mt-3 flex justify-end gap-2 border-t border-[var(--border)] pt-3">
               <button
@@ -197,7 +227,14 @@ export default function HoldingsTable({
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
                   {r.live ? (
-                    formatPrice(r.cmp)
+                    <>
+                      <div>{formatPrice(r.cmp)}</div>
+                      {r.dayChangePct != null && (
+                        <div className={`text-xs ${gainClass(r.dayChangePct)}`}>
+                          {formatPercent(r.dayChangePct)} today
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <span className="text-[var(--muted)]" title="No live price">
                       —
@@ -205,7 +242,12 @@ export default function HoldingsTable({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
-                  {formatINR(r.currentValue)}
+                  <div>{formatINR(r.currentValue)}</div>
+                  {weightOf(r, totalValue) != null && (
+                    <div className="text-xs text-[var(--muted)]">
+                      {weightOf(r, totalValue)!.toFixed(1)}% of book
+                    </div>
+                  )}
                 </td>
                 <td
                   className={`px-4 py-3 text-right tabular-nums font-medium ${gainClass(

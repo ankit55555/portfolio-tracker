@@ -17,6 +17,7 @@ export type HoldingRow = HoldingRecord & {
   gainRs: number | null;
   gainPct: number | null;
   dayChangePct: number | null;
+  dayChangeRs: number | null;
   live: boolean;
 };
 
@@ -25,6 +26,8 @@ export type PortfolioTotals = {
   currentValue: number;
   gainRs: number;
   gainPct: number;
+  dayChangeRs: number;
+  dayChangePct: number;
   count: number;
   livePrices: number;
 };
@@ -39,6 +42,9 @@ export function computeRow(h: HoldingRecord, quote?: Quote): HoldingRow {
   const gainPct =
     gainRs != null && buyValue !== 0 ? (gainRs / buyValue) * 100 : null;
 
+  const dayChangeRs =
+    quote?.change != null ? quote.change * h.quantity : null;
+
   return {
     ...h,
     buyValue,
@@ -47,6 +53,7 @@ export function computeRow(h: HoldingRecord, quote?: Quote): HoldingRow {
     gainRs,
     gainPct,
     dayChangePct: quote?.changePercent ?? null,
+    dayChangeRs,
     live,
   };
 }
@@ -57,21 +64,31 @@ export function computeTotals(rows: HoldingRow[]): PortfolioTotals {
   let buyValue = 0;
   let currentValue = 0;
   let livePrices = 0;
+  let dayChangeRs = 0;
+  let prevDayValue = 0; // value of day-priced holdings as of yesterday's close
 
   for (const r of rows) {
     buyValue += r.buyValue;
     currentValue += r.currentValue ?? r.buyValue;
     if (r.live) livePrices += 1;
+    if (r.dayChangeRs != null && r.currentValue != null) {
+      dayChangeRs += r.dayChangeRs;
+      prevDayValue += r.currentValue - r.dayChangeRs;
+    }
   }
 
   const gainRs = currentValue - buyValue;
   const gainPct = buyValue !== 0 ? (gainRs / buyValue) * 100 : 0;
+  const dayChangePct =
+    prevDayValue !== 0 ? (dayChangeRs / prevDayValue) * 100 : 0;
 
   return {
     buyValue,
     currentValue,
     gainRs,
     gainPct,
+    dayChangeRs,
+    dayChangePct,
     count: rows.length,
     livePrices,
   };
