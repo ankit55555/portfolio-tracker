@@ -161,7 +161,7 @@ export default function Dashboard({ email }: { email: string }) {
       </header>
 
       {/* Summary cards */}
-      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <SummaryCard label="Invested" value={formatINR(totals?.buyValue ?? 0)} />
         <SummaryCard
           label="Current Value"
@@ -171,13 +171,8 @@ export default function Dashboard({ email }: { email: string }) {
           label="Unrealised Gain"
           value={formatSignedINR(totals?.gainRs ?? 0)}
           valueClass={gainClass(totals?.gainRs ?? 0)}
-          sub={formatPercent(totals?.gainPct ?? 0)}
+          sub={`${formatPercent(totals?.gainPct ?? 0)} return`}
           subClass={gainClass(totals?.gainPct ?? 0)}
-        />
-        <SummaryCard
-          label="Return %"
-          value={formatPercent(totals?.gainPct ?? 0)}
-          valueClass={gainClass(totals?.gainPct ?? 0)}
         />
         <SummaryCard
           label="Today's P&L"
@@ -190,19 +185,23 @@ export default function Dashboard({ email }: { email: string }) {
 
       {/* Best / worst performer */}
       {best && worst && (
-        <div className="mb-4 flex flex-wrap gap-3 text-sm">
-          <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-            <span className="text-[var(--muted)]">Top gainer</span>
-            <span className="font-medium">{best.symbol}</span>
-            <span className="font-semibold text-[var(--gain)] tabular-nums">
-              {formatPercent(best.gainPct)}
+        <div className="mb-4 grid grid-cols-2 gap-2 text-sm sm:flex sm:gap-3">
+          <div className="flex flex-col rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 sm:flex-row sm:items-center sm:gap-2">
+            <span className="text-xs text-[var(--muted)]">Top gainer</span>
+            <span className="flex items-center gap-1.5">
+              <span className="font-medium">{best.symbol}</span>
+              <span className="font-semibold text-[var(--gain)] tabular-nums">
+                {formatPercent(best.gainPct)}
+              </span>
             </span>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-            <span className="text-[var(--muted)]">Top loser</span>
-            <span className="font-medium">{worst.symbol}</span>
-            <span className="font-semibold text-[var(--loss)] tabular-nums">
-              {formatPercent(worst.gainPct)}
+          <div className="flex flex-col rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 sm:flex-row sm:items-center sm:gap-2">
+            <span className="text-xs text-[var(--muted)]">Top loser</span>
+            <span className="flex items-center gap-1.5">
+              <span className="font-medium">{worst.symbol}</span>
+              <span className="font-semibold text-[var(--loss)] tabular-nums">
+                {formatPercent(worst.gainPct)}
+              </span>
             </span>
           </div>
         </div>

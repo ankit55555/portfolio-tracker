@@ -41,38 +41,39 @@ export default function HoldingsToolbar({
   total,
 }: Props) {
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-2">
+    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       {/* Search */}
       <input
         value={search}
         onChange={(e) => onSearch(e.target.value)}
         placeholder="Search symbol…"
-        className="min-w-0 flex-1 sm:flex-none sm:w-48 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)] sm:w-44"
       />
 
-      {/* Gainers / Losers filter */}
-      <div className="flex rounded-lg border border-[var(--border)] p-0.5">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => onFilter(f.key)}
-            className={`rounded-md px-3 py-1.5 text-sm ${
-              filter === f.key
-                ? "bg-[var(--accent)] text-white"
-                : "text-[var(--muted)] hover:text-[var(--text)]"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {/* Controls row */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Gainers / Losers filter */}
+        <div className="flex flex-1 rounded-lg border border-[var(--border)] p-0.5 sm:flex-none">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => onFilter(f.key)}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
+                filter === f.key
+                  ? "bg-[var(--accent)] text-white"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
 
-      {/* Sort */}
-      <div className="flex items-center gap-1">
+        {/* Sort */}
         <select
           value={sortKey}
           onChange={(e) => onSortKey(e.target.value as SortKey)}
-          className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-2 py-2 text-sm outline-none focus:border-[var(--accent)]"
+          className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-2 py-2 text-sm outline-none focus:border-[var(--accent)] sm:flex-none"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.key} value={o.key}>
@@ -88,16 +89,16 @@ export default function HoldingsToolbar({
         >
           {sortDir === "asc" ? "↑" : "↓"}
         </button>
+        <button
+          onClick={onExport}
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:border-[var(--accent)]"
+          title="Download holdings as CSV"
+        >
+          ⬇ Export
+        </button>
       </div>
 
-      <button
-        onClick={onExport}
-        className="ml-auto rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:border-[var(--accent)]"
-        title="Download holdings as CSV"
-      >
-        ⬇ Export
-      </button>
-      <span className="text-xs text-[var(--muted)]">
+      <span className="text-xs text-[var(--muted)] sm:ml-auto">
         {shown === total ? `${total} holdings` : `${shown} of ${total}`}
       </span>
     </div>
