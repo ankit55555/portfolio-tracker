@@ -1,6 +1,7 @@
 "use client";
 
 import type { HoldingRow } from "@/lib/portfolio";
+import type { SortDir, SortKey } from "@/lib/holdingsView";
 import {
   formatINR,
   formatNumber,
@@ -13,7 +14,21 @@ type Props = {
   rows: HoldingRow[];
   onEdit: (h: HoldingRow) => void;
   onDelete: (h: HoldingRow) => void;
+  sortKey?: SortKey;
+  sortDir?: SortDir;
+  onSort?: (k: SortKey) => void;
 };
+
+const COLUMNS: { label: string; key: SortKey; align: "left" | "right" }[] = [
+  { label: "Stock", key: "symbol", align: "left" },
+  { label: "Buy Price", key: "buyPrice", align: "right" },
+  { label: "Qty", key: "quantity", align: "right" },
+  { label: "Buy Value", key: "buyValue", align: "right" },
+  { label: "CMP", key: "cmp", align: "right" },
+  { label: "Current Value", key: "currentValue", align: "right" },
+  { label: "% Gain", key: "gainPct", align: "right" },
+  { label: "Gain ₹", key: "gainRs", align: "right" },
+];
 
 function gainClass(value: number | null | undefined) {
   if (value == null) return "text-[var(--muted)]";
@@ -45,7 +60,14 @@ function Metric({
   );
 }
 
-export default function HoldingsTable({ rows, onEdit, onDelete }: Props) {
+export default function HoldingsTable({
+  rows,
+  onEdit,
+  onDelete,
+  sortKey,
+  sortDir,
+  onSort,
+}: Props) {
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-10 text-center text-[var(--muted)]">
@@ -122,14 +144,33 @@ export default function HoldingsTable({ rows, onEdit, onDelete }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)] text-left text-[var(--muted)]">
-              <th className="px-4 py-3 font-medium">Stock</th>
-              <th className="px-4 py-3 font-medium text-right">Buy Price</th>
-              <th className="px-4 py-3 font-medium text-right">Qty</th>
-              <th className="px-4 py-3 font-medium text-right">Buy Value</th>
-              <th className="px-4 py-3 font-medium text-right">CMP</th>
-              <th className="px-4 py-3 font-medium text-right">Current Value</th>
-              <th className="px-4 py-3 font-medium text-right">% Gain</th>
-              <th className="px-4 py-3 font-medium text-right">Gain ₹</th>
+              {COLUMNS.map((col) => {
+                const active = sortKey === col.key;
+                return (
+                  <th
+                    key={col.key}
+                    className={`px-4 py-3 font-medium ${
+                      col.align === "right" ? "text-right" : ""
+                    }`}
+                  >
+                    {onSort ? (
+                      <button
+                        onClick={() => onSort(col.key)}
+                        className={`inline-flex items-center gap-1 hover:text-[var(--text)] ${
+                          active ? "text-[var(--text)]" : ""
+                        }`}
+                      >
+                        {col.label}
+                        <span className="text-[10px] w-2">
+                          {active ? (sortDir === "asc" ? "▲" : "▼") : ""}
+                        </span>
+                      </button>
+                    ) : (
+                      col.label
+                    )}
+                  </th>
+                );
+              })}
               <th className="px-4 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>

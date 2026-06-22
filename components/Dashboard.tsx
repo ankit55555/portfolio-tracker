@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import type { HoldingRow, PortfolioTotals } from "@/lib/portfolio";
+import {
+  viewHoldings,
+  type FilterMode,
+  type SortDir,
+  type SortKey,
+} from "@/lib/holdingsView";
 import {
   formatINR,
   formatPercent,
   formatSignedINR,
 } from "@/lib/format";
 import HoldingsTable from "@/components/HoldingsTable";
+import HoldingsToolbar from "@/components/HoldingsToolbar";
 import HoldingForm from "@/components/HoldingForm";
 import ImportHoldings from "@/components/ImportHoldings";
 import SignOutButton from "@/components/SignOutButton";
@@ -42,6 +49,27 @@ export default function Dashboard({ email }: { email: string }) {
   const [showAdd, setShowAdd] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<HoldingRow | null>(null);
+
+  // Sort & filter state
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<FilterMode>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("default");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  function onSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "symbol" ? "asc" : "desc");
+    }
+  }
+
+  const holdings = data?.holdings ?? [];
+  const displayed = useMemo(
+    () => viewHoldings(holdings, { search, filter, sortKey, sortDir }),
+    [holdings, search, filter, sortKey, sortDir]
+  );
 
   async function handleDelete(h: HoldingRow) {
     await fetch(`/api/holdings/${h.id}`, { method: "DELETE" });
@@ -134,11 +162,38 @@ export default function Dashboard({ email }: { email: string }) {
         </div>
       ) : (
         <>
-          <HoldingsTable
-            rows={data!.holdings}
-            onEdit={(h) => setEditing(h)}
-            onDelete={handleDelete}
-          />
+          {data!.holdings.length > 0 && (
+            <HoldingsToolbar
+              search={search}
+              onSearch={setSearch}
+              filter={filter}
+              onFilter={setFilter}
+              sortKey={sortKey}
+              onSortKey={(k) => {
+                setSortKey(k);
+                setSortDir(k === "symbol" ? "asc" : "desc");
+              }}
+              sortDir={sortDir}
+              onToggleDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              shown={displayed.length}
+              total={data!.holdings.length}
+            />
+          )}
+
+          {data!.holdings.length > 0 && displayed.length === 0 ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-10 text-center text-[var(--muted)]">
+              No holdings match your search or filter.
+            </div>
+          ) : (
+            <HoldingsTable
+              rows={displayed}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={onSort}
+              onEdit={(h) => setEditing(h)}
+              onDelete={handleDelete}
+            />
+          )}
           {totals && data!.holdings.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center justify-end gap-x-8 gap-y-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm">
               <span className="text-[var(--muted)]">
