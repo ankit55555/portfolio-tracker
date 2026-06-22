@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import type { HoldingRow, PortfolioTotals } from "@/lib/portfolio";
@@ -15,6 +15,7 @@ import {
   formatPercent,
   formatSignedINR,
 } from "@/lib/format";
+import { holdingsToCsv } from "@/lib/csv";
 import HoldingsTable from "@/components/HoldingsTable";
 import HoldingsToolbar from "@/components/HoldingsToolbar";
 import HoldingForm from "@/components/HoldingForm";
@@ -39,6 +40,15 @@ function gainClass(value: number) {
   return "text-[var(--text)]";
 }
 
+function relativeTime(d: Date) {
+  const s = Math.round((Date.now() - d.getTime()) / 1000);
+  if (s < 10) return "just now";
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  return `${Math.floor(m / 60)}h ago`;
+}
+
 export default function Dashboard({ email }: { email: string }) {
   const { data, error, isLoading, isValidating, mutate } =
     useSWR<PortfolioResponse>("/api/portfolio", fetcher, {
@@ -55,6 +65,13 @@ export default function Dashboard({ email }: { email: string }) {
   const [filter, setFilter] = useState<FilterMode>("all");
   const [sortKey, setSortKey] = useState<SortKey>("default");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  // Re-render every 20s so the "updated Xs ago" label stays fresh.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 20_000);
+    return () => clearInterval(id);
+  }, []);
 
   function onSort(key: SortKey) {
     if (key === sortKey) {
@@ -87,6 +104,19 @@ export default function Dashboard({ email }: { email: string }) {
   async function handleDelete(h: HoldingRow) {
     await fetch(`/api/holdings/${h.id}`, { method: "DELETE" });
     mutate();
+  }
+
+  function handleExport() {
+    const csv = holdingsToCsv(displayed.length ? displayed : holdings);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `portfolio-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   const totals = data?.totals;
@@ -182,7 +212,7 @@ export default function Dashboard({ email }: { email: string }) {
       <div className="flex items-center justify-between mb-2 text-xs text-[var(--muted)]">
         <span>
           {asOf
-            ? `Updated ${asOf.toLocaleTimeString("en-IN")} · auto-refresh 60s`
+            ? `Updated ${relativeTime(asOf)} · auto-refresh 60s`
             : "Loading…"}
         </span>
         {totals && (
@@ -199,8 +229,18 @@ export default function Dashboard({ email }: { email: string }) {
           Could not load your portfolio. Try refreshing.
         </div>
       ) : isLoading ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-10 text-center text-[var(--muted)]">
-          Loading holdings and live prices…
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-4 py-4 last:border-0"
+            >
+              <div className="h-4 w-28 animate-pulse rounded bg-[var(--surface-2)]" />
+              <div className="h-4 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
+              <div className="h-4 w-20 animate-pulse rounded bg-[var(--surface-2)]" />
+              <div className="hidden h-4 w-16 animate-pulse rounded bg-[var(--surface-2)] sm:block" />
+            </div>
+          ))}
         </div>
       ) : (
         <>
@@ -217,6 +257,7 @@ export default function Dashboard({ email }: { email: string }) {
               }}
               sortDir={sortDir}
               onToggleDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              onExport={handleExport}
               shown={displayed.length}
               total={data!.holdings.length}
             />

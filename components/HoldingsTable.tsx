@@ -179,7 +179,7 @@ export default function HoldingsTable({
                 return (
                   <th
                     key={col.key}
-                    className={`px-4 py-3 font-medium ${
+                    className={`sticky top-0 z-10 bg-[var(--surface)] px-4 py-3 font-medium ${
                       col.align === "right" ? "text-right" : ""
                     }`}
                   >
@@ -201,7 +201,9 @@ export default function HoldingsTable({
                   </th>
                 );
               })}
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
+              <th className="sticky top-0 z-10 bg-[var(--surface)] px-4 py-3 font-medium text-right">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>

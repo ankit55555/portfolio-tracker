@@ -16,6 +16,7 @@ type Props = {
   onSortKey: (k: SortKey) => void;
   sortDir: SortDir;
   onToggleDir: () => void;
+  onExport: () => void;
   shown: number;
   total: number;
 };
@@ -35,6 +36,7 @@ export default function HoldingsToolbar({
   onSortKey,
   sortDir,
   onToggleDir,
+  onExport,
   shown,
   total,
 }: Props) {
@@ -88,7 +90,14 @@ export default function HoldingsToolbar({
         </button>
       </div>
 
-      <span className="ml-auto text-xs text-[var(--muted)]">
+      <button
+        onClick={onExport}
+        className="ml-auto rounded-lg border border-[var(--border)] px-3 py-2 text-sm hover:border-[var(--accent)]"
+        title="Download holdings as CSV"
+      >
+        ⬇ Export
+      </button>
+      <span className="text-xs text-[var(--muted)]">
         {shown === total ? `${total} holdings` : `${shown} of ${total}`}
       </span>
     </div>
